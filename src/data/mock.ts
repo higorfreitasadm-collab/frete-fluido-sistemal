@@ -1,4 +1,4 @@
-import { NotaFiscal, User, ActivityLog } from '@/types';
+import { NotaFiscal, User, ActivityLog, PendItem } from '@/types';
 
 export const mockUsers: User[] = [
   { id: '1', nome: 'Carlos Silva', email: 'carlos@empresa.com', role: 'administrador', avatar_url: '' },
@@ -8,56 +8,35 @@ export const mockUsers: User[] = [
 ];
 
 export const mockNFs: NotaFiscal[] = [
-  {
-    id: '1', numero_nf: 'NF-2024-001', remetente: 'Transportadora ABC', destinatario: 'Loja Central',
-    data_chegada: '2024-12-01', data_entrega: '2024-12-05', frete: 1250.00, status: 'entregue',
-    responsavel_id: '1', observacoes: 'Entrega realizada sem problemas.', created_at: '2024-12-01T08:00:00Z', updated_at: '2024-12-05T14:00:00Z',
-  },
-  {
-    id: '2', numero_nf: 'NF-2024-002', remetente: 'Logística Express', destinatario: 'Filial Norte',
-    data_chegada: '2024-12-03', data_entrega: null, frete: 3450.75, status: 'pendente',
-    responsavel_id: '2', observacoes: 'Aguardando confirmação do destinatário.', created_at: '2024-12-03T10:30:00Z', updated_at: '2024-12-03T10:30:00Z',
-  },
-  {
-    id: '3', numero_nf: 'NF-2024-003', remetente: 'Frete Rápido Ltda', destinatario: 'CD São Paulo',
-    data_chegada: '2024-11-15', data_entrega: null, frete: 8900.00, status: 'atrasada',
-    responsavel_id: '3', observacoes: '', created_at: '2024-11-15T09:00:00Z', updated_at: '2024-11-20T09:00:00Z',
-  },
-  {
-    id: '4', numero_nf: 'NF-2024-004', remetente: 'Transportes União', destinatario: 'Depósito Sul',
-    data_chegada: '2024-12-08', data_entrega: '2024-12-10', frete: 2100.50, status: 'entregue',
-    responsavel_id: '1', observacoes: 'Carga frágil manuseada com cuidado.', created_at: '2024-12-08T07:45:00Z', updated_at: '2024-12-10T16:00:00Z',
-  },
-  {
-    id: '5', numero_nf: 'NF-2024-005', remetente: 'Cargas Brasil', destinatario: 'Loja Centro',
-    data_chegada: '2024-12-10', data_entrega: null, frete: 1780.30, status: 'pendente',
-    responsavel_id: '4', observacoes: 'Previsão de entrega para sexta-feira.', created_at: '2024-12-10T11:00:00Z', updated_at: '2024-12-10T11:00:00Z',
-  },
-  {
-    id: '6', numero_nf: 'NF-2024-006', remetente: 'Expresso Nordeste', destinatario: 'Filial Recife',
-    data_chegada: '2024-11-20', data_entrega: null, frete: 5600.00, status: 'atrasada',
-    responsavel_id: '2', observacoes: 'Problemas na rota. Verificar com motorista.', created_at: '2024-11-20T08:00:00Z', updated_at: '2024-11-25T08:00:00Z',
-  },
-  {
-    id: '7', numero_nf: 'NF-2024-007', remetente: 'Transportadora ABC', destinatario: 'CD Minas',
-    data_chegada: '2024-12-12', data_entrega: '2024-12-14', frete: 3200.00, status: 'entregue',
-    responsavel_id: '3', observacoes: 'Entrega antecipada.', created_at: '2024-12-12T09:30:00Z', updated_at: '2024-12-14T10:00:00Z',
-  },
-  {
-    id: '8', numero_nf: 'NF-2024-008', remetente: 'Logística Express', destinatario: 'Loja Central',
-    data_chegada: '2024-12-14', data_entrega: null, frete: 980.00, status: 'pendente',
-    responsavel_id: '1', observacoes: '', created_at: '2024-12-14T14:00:00Z', updated_at: '2024-12-14T14:00:00Z',
-  },
-  {
-    id: '9', numero_nf: 'NF-2024-009', remetente: 'Frete Rápido Ltda', destinatario: 'Filial Norte',
-    data_chegada: '2024-11-28', data_entrega: null, frete: 4300.00, status: 'atrasada',
-    responsavel_id: '4', observacoes: 'Carga retida na fiscalização.', created_at: '2024-11-28T07:00:00Z', updated_at: '2024-12-02T07:00:00Z',
-  },
-  {
-    id: '10', numero_nf: 'NF-2024-010', remetente: 'Cargas Brasil', destinatario: 'Depósito Sul',
-    data_chegada: '2024-12-15', data_entrega: '2024-12-16', frete: 1500.00, status: 'entregue',
-    responsavel_id: '2', observacoes: 'Tudo certo.', created_at: '2024-12-15T10:00:00Z', updated_at: '2024-12-16T15:00:00Z',
-  },
+  { id: '1', numero_nf: 'NF-2024-001', remetente: 'Transportadora ABC', destinatario: 'Loja Central', data_chegada: '2024-12-01', data_entrega: '2024-12-05', frete: 1250.00, status: 'entregue', responsavel_id: '1', observacoes: 'Entrega realizada sem problemas.', created_at: '2024-12-01T08:00:00Z', updated_at: '2024-12-05T14:00:00Z' },
+  { id: '2', numero_nf: 'NF-2024-002', remetente: 'Logística Express', destinatario: 'Filial Norte', data_chegada: '2024-12-03', data_entrega: null, frete: 3450.75, status: 'pendente', responsavel_id: '2', observacoes: 'Aguardando confirmação do destinatário.', created_at: '2024-12-03T10:30:00Z', updated_at: '2024-12-03T10:30:00Z' },
+  { id: '3', numero_nf: 'NF-2024-003', remetente: 'Frete Rápido Ltda', destinatario: 'CD São Paulo', data_chegada: '2024-11-15', data_entrega: null, frete: 8900.00, status: 'atrasada', responsavel_id: '3', observacoes: '', created_at: '2024-11-15T09:00:00Z', updated_at: '2024-11-20T09:00:00Z' },
+  { id: '4', numero_nf: 'NF-2024-004', remetente: 'Transportes União', destinatario: 'Depósito Sul', data_chegada: '2024-12-08', data_entrega: '2024-12-10', frete: 2100.50, status: 'entregue', responsavel_id: '1', observacoes: 'Carga frágil manuseada com cuidado.', created_at: '2024-12-08T07:45:00Z', updated_at: '2024-12-10T16:00:00Z' },
+  { id: '5', numero_nf: 'NF-2024-005', remetente: 'Cargas Brasil', destinatario: 'Loja Centro', data_chegada: '2024-12-10', data_entrega: null, frete: 1780.30, status: 'pendente', responsavel_id: '4', observacoes: 'Previsão de entrega para sexta-feira.', created_at: '2024-12-10T11:00:00Z', updated_at: '2024-12-10T11:00:00Z' },
+  { id: '6', numero_nf: 'NF-2024-006', remetente: 'Expresso Nordeste', destinatario: 'Filial Recife', data_chegada: '2024-11-20', data_entrega: null, frete: 5600.00, status: 'atrasada', responsavel_id: '2', observacoes: 'Problemas na rota. Verificar com motorista.', created_at: '2024-11-20T08:00:00Z', updated_at: '2024-11-25T08:00:00Z' },
+  { id: '7', numero_nf: 'NF-2024-007', remetente: 'Transportadora ABC', destinatario: 'CD Minas', data_chegada: '2024-12-12', data_entrega: '2024-12-14', frete: 3200.00, status: 'entregue', responsavel_id: '3', observacoes: 'Entrega antecipada.', created_at: '2024-12-12T09:30:00Z', updated_at: '2024-12-14T10:00:00Z' },
+  { id: '8', numero_nf: 'NF-2024-008', remetente: 'Logística Express', destinatario: 'Loja Central', data_chegada: '2024-12-14', data_entrega: null, frete: 980.00, status: 'pendente', responsavel_id: '1', observacoes: '', created_at: '2024-12-14T14:00:00Z', updated_at: '2024-12-14T14:00:00Z' },
+  { id: '9', numero_nf: 'NF-2024-009', remetente: 'Frete Rápido Ltda', destinatario: 'Filial Norte', data_chegada: '2024-11-28', data_entrega: null, frete: 4300.00, status: 'atrasada', responsavel_id: '4', observacoes: 'Carga retida na fiscalização.', created_at: '2024-11-28T07:00:00Z', updated_at: '2024-12-02T07:00:00Z' },
+  { id: '10', numero_nf: 'NF-2024-010', remetente: 'Cargas Brasil', destinatario: 'Depósito Sul', data_chegada: '2024-12-15', data_entrega: '2024-12-16', frete: 1500.00, status: 'entregue', responsavel_id: '2', observacoes: 'Tudo certo.', created_at: '2024-12-15T10:00:00Z', updated_at: '2024-12-16T15:00:00Z' },
+];
+
+export const mockPendPTE: PendItem[] = [
+  { id: 'pte-1', numero_nf: 'PTE-2024-001', remetente: 'Transportadora ABC', destinatario: 'Loja Central', data_chegada: '2024-12-01', data_entrega: '2024-12-05', frete: 2350.00, data_pagamento: '2024-12-20', status: 'entregue', responsavel_id: '1', observacoes: 'Pagamento realizado via boleto.', created_at: '2024-12-01T08:00:00Z', updated_at: '2024-12-20T10:00:00Z' },
+  { id: 'pte-2', numero_nf: 'PTE-2024-002', remetente: 'Logística Express', destinatario: 'Filial Norte', data_chegada: '2024-12-05', data_entrega: null, frete: 4120.00, data_pagamento: null, status: 'pendente', responsavel_id: '2', observacoes: 'Aguardando entrega para liberar pagamento.', created_at: '2024-12-05T09:00:00Z', updated_at: '2024-12-05T09:00:00Z' },
+  { id: 'pte-3', numero_nf: 'PTE-2024-003', remetente: 'Frete Rápido Ltda', destinatario: 'CD São Paulo', data_chegada: '2024-11-10', data_entrega: '2024-11-15', frete: 7800.00, data_pagamento: null, status: 'atrasada', responsavel_id: '3', observacoes: 'Pagamento em atraso. Cobrar financeiro.', created_at: '2024-11-10T07:00:00Z', updated_at: '2024-11-20T07:00:00Z' },
+  { id: 'pte-4', numero_nf: 'PTE-2024-004', remetente: 'Transportes União', destinatario: 'Depósito Sul', data_chegada: '2024-12-08', data_entrega: '2024-12-12', frete: 1900.00, data_pagamento: '2024-12-22', status: 'entregue', responsavel_id: '4', observacoes: 'Pago com desconto de 5%.', created_at: '2024-12-08T08:30:00Z', updated_at: '2024-12-22T14:00:00Z' },
+  { id: 'pte-5', numero_nf: 'PTE-2024-005', remetente: 'Cargas Brasil', destinatario: 'Loja Centro', data_chegada: '2024-12-12', data_entrega: null, frete: 3250.00, data_pagamento: null, status: 'pendente', responsavel_id: '1', observacoes: '', created_at: '2024-12-12T10:00:00Z', updated_at: '2024-12-12T10:00:00Z' },
+  { id: 'pte-6', numero_nf: 'PTE-2024-006', remetente: 'Expresso Nordeste', destinatario: 'Filial Recife', data_chegada: '2024-11-25', data_entrega: '2024-12-01', frete: 6100.00, data_pagamento: null, status: 'atrasada', responsavel_id: '2', observacoes: 'Verificar com setor financeiro.', created_at: '2024-11-25T08:00:00Z', updated_at: '2024-12-05T08:00:00Z' },
+  { id: 'pte-7', numero_nf: 'PTE-2024-007', remetente: 'Transportadora ABC', destinatario: 'CD Minas', data_chegada: '2024-12-14', data_entrega: null, frete: 2800.00, data_pagamento: null, status: 'pendente', responsavel_id: '3', observacoes: 'Previsão de pagamento dia 30.', created_at: '2024-12-14T11:00:00Z', updated_at: '2024-12-14T11:00:00Z' },
+];
+
+export const mockPendSal: PendItem[] = [
+  { id: 'sal-1', numero_nf: 'SAL-2024-001', remetente: 'Transportes União', destinatario: 'Loja Central', data_chegada: '2024-12-02', data_entrega: '2024-12-06', frete: 1800.00, data_pagamento: '2024-12-18', status: 'entregue', responsavel_id: '4', observacoes: 'Salário referente a dezembro.', created_at: '2024-12-02T09:00:00Z', updated_at: '2024-12-18T15:00:00Z' },
+  { id: 'sal-2', numero_nf: 'SAL-2024-002', remetente: 'Cargas Brasil', destinatario: 'Filial Norte', data_chegada: '2024-12-04', data_entrega: null, frete: 5400.00, data_pagamento: null, status: 'pendente', responsavel_id: '1', observacoes: 'Pendente aprovação gerencial.', created_at: '2024-12-04T10:00:00Z', updated_at: '2024-12-04T10:00:00Z' },
+  { id: 'sal-3', numero_nf: 'SAL-2024-003', remetente: 'Logística Express', destinatario: 'CD São Paulo', data_chegada: '2024-11-18', data_entrega: '2024-11-22', frete: 9200.00, data_pagamento: null, status: 'atrasada', responsavel_id: '2', observacoes: 'Pagamento atrasado há 20 dias.', created_at: '2024-11-18T08:00:00Z', updated_at: '2024-12-01T08:00:00Z' },
+  { id: 'sal-4', numero_nf: 'SAL-2024-004', remetente: 'Frete Rápido Ltda', destinatario: 'Depósito Sul', data_chegada: '2024-12-10', data_entrega: '2024-12-13', frete: 3100.00, data_pagamento: '2024-12-25', status: 'entregue', responsavel_id: '3', observacoes: 'Pago via transferência.', created_at: '2024-12-10T07:30:00Z', updated_at: '2024-12-25T10:00:00Z' },
+  { id: 'sal-5', numero_nf: 'SAL-2024-005', remetente: 'Expresso Nordeste', destinatario: 'Loja Centro', data_chegada: '2024-12-13', data_entrega: null, frete: 2650.00, data_pagamento: null, status: 'pendente', responsavel_id: '4', observacoes: '', created_at: '2024-12-13T12:00:00Z', updated_at: '2024-12-13T12:00:00Z' },
+  { id: 'sal-6', numero_nf: 'SAL-2024-006', remetente: 'Transportadora ABC', destinatario: 'Filial Recife', data_chegada: '2024-11-22', data_entrega: null, frete: 4750.00, data_pagamento: null, status: 'atrasada', responsavel_id: '1', observacoes: 'Sem previsão de pagamento.', created_at: '2024-11-22T08:00:00Z', updated_at: '2024-12-03T08:00:00Z' },
 ];
 
 export const mockActivities: ActivityLog[] = [

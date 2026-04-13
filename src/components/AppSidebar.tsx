@@ -9,12 +9,16 @@ import {
   Users,
   Settings,
   Truck,
+  ClipboardList,
+  Wallet,
 } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
   { label: 'Notas Fiscais', path: '/notas-fiscais', icon: FileText },
   { label: 'Nova NF', path: '/nova-nf', icon: FilePlus },
+  { label: 'Pend. PTE', path: '/pend-pte', icon: ClipboardList },
+  { label: 'Pend. Sal', path: '/pend-sal', icon: Wallet },
   { label: 'Relatórios', path: '/relatorios', icon: BarChart3 },
   { label: 'Histórico', path: '/historico', icon: History },
   { label: 'Usuários', path: '/usuarios', icon: Users },
@@ -40,7 +44,7 @@ export function AppSidebar() {
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           return (
             <Link
               key={item.path}
