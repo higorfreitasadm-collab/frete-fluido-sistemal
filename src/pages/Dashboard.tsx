@@ -3,7 +3,6 @@ import { MetricCard } from '@/components/MetricCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PaymentBadge } from '@/components/PaymentBadge';
 import { usePendItems } from '@/hooks/usePend';
-import { usePendItems } from '@/hooks/usePend';
 import { mockActivities } from '@/data/mock';
 import { FileText, Clock, CheckCircle, AlertTriangle, DollarSign, CreditCard, Banknote, CalendarClock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Cell } from 'recharts';
