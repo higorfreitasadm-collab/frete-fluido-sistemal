@@ -2,7 +2,6 @@ import { AppLayout } from '@/components/AppLayout';
 import { MetricCard } from '@/components/MetricCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PaymentBadge } from '@/components/PaymentBadge';
-import { useNFs } from '@/hooks/useNFs';
 import { usePendItems } from '@/hooks/usePend';
 import { mockActivities } from '@/data/mock';
 import { FileText, Clock, CheckCircle, AlertTriangle, DollarSign, CreditCard, Banknote, CalendarClock } from 'lucide-react';
@@ -13,17 +12,16 @@ function formatCurrency(value: number) {
 }
 
 export default function Dashboard() {
-  const { data: nfs = [], isLoading: loadingNFs } = useNFs();
-  const { data: pendPTE = [] } = usePendItems('pend-pte');
-  const { data: pendSal = [] } = usePendItems('pend-sal');
+  const { data: pendPTE = [], isLoading: loadingPTE } = usePendItems('pend-pte');
+  const { data: pendSal = [], isLoading: loadingSal } = usePendItems('pend-sal');
 
   const allPend = [...pendPTE, ...pendSal];
 
-  const total = nfs.length;
-  const pendentes = nfs.filter(n => n.status === 'pendente').length;
-  const entregues = nfs.filter(n => n.status === 'entregue').length;
-  const atrasadas = nfs.filter(n => n.status === 'atrasada').length;
-  const totalFrete = nfs.reduce((sum, n) => sum + n.frete, 0);
+  const total = allPend.length;
+  const pendentes = allPend.filter(n => n.status === 'pendente').length;
+  const entregues = allPend.filter(n => n.status === 'entregue').length;
+  const atrasadas = allPend.filter(n => n.status === 'atrasada').length;
+  const totalFrete = allPend.reduce((sum, n) => sum + n.frete, 0);
 
   const pgtosPendentes = allPend.filter(p => !p.data_pagamento).length;
   const valorAReceber = allPend.filter(p => !p.data_pagamento).reduce((s, p) => s + p.frete, 0);
@@ -47,12 +45,12 @@ export default function Dashboard() {
     { mes: 'Dez', pago: valorPago, pendente: valorAReceber },
   ];
 
-  const ultimasNFs = [...nfs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
-  const pendentesAntigas = nfs.filter(n => n.status === 'pendente' || n.status === 'atrasada').sort((a, b) => new Date(a.data_chegada).getTime() - new Date(b.data_chegada).getTime()).slice(0, 5);
+  const ultimasNFs = [...allPend].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5);
+  const pendentesAntigas = allPend.filter(n => n.status === 'pendente' || n.status === 'atrasada').sort((a, b) => new Date(a.data_chegada).getTime() - new Date(b.data_chegada).getTime()).slice(0, 5);
 
   const tooltipStyle = { backgroundColor: 'hsl(217, 33%, 17%)', border: '1px solid hsl(217, 33%, 22%)', borderRadius: '8px', color: '#fff' };
 
-  if (loadingNFs) {
+  if (loadingPTE || loadingSal) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">

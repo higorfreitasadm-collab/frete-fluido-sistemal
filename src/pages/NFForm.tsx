@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
-import { useCriarNF, useAtualizarNF, useNF } from '@/hooks/useNFs';
+import { useCriarPend } from '@/hooks/usePend';
 import { mockUsers } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,24 +9,24 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { PendModuleType } from '@/types';
 
 export default function NFForm() {
-  const { id } = useParams();
-  const isEditing = !!id;
   const navigate = useNavigate();
-  const criarNF = useCriarNF();
-  const atualizarNF = useAtualizarNF();
-  const { data: nfExistente } = useNF(id ?? '');
+  const criarPTE = useCriarPend('pend-pte');
+  const criarSAL = useCriarPend('pend-sal');
 
   const [form, setForm] = useState({
-    numero_nf: nfExistente?.numero_nf ?? '',
-    remetente: nfExistente?.remetente ?? '',
-    destinatario: nfExistente?.destinatario ?? '',
-    data_chegada: nfExistente?.data_chegada ?? '',
-    data_entrega: nfExistente?.data_entrega ?? '',
-    frete: nfExistente?.frete?.toString() ?? '',
-    responsavel_id: nfExistente?.responsavel_id ?? '',
-    observacoes: nfExistente?.observacoes ?? '',
+    numero_nf: '',
+    remetente: '',
+    destinatario: '',
+    data_chegada: '',
+    data_entrega: '',
+    frete: '',
+    data_pagamento: '',
+    responsavel_id: '',
+    observacoes: '',
+    categoria: '' as '' | PendModuleType,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,6 +39,7 @@ export default function NFForm() {
     if (!form.data_chegada) e.data_chegada = 'Data de chegada é obrigatória';
     if (!form.frete || isNaN(Number(form.frete.replace(',', '.')))) e.frete = 'Valor do frete inválido';
     if (!form.responsavel_id) e.responsavel_id = 'Selecione um responsável';
+    if (!form.categoria) e.categoria = 'Selecione uma categoria';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -48,17 +49,25 @@ export default function NFForm() {
     if (!validate()) return;
 
     const data = {
-      ...form,
+      numero_nf: form.numero_nf,
+      remetente: form.remetente,
+      destinatario: form.destinatario,
+      data_chegada: form.data_chegada,
+      data_entrega: form.data_entrega,
       frete: Number(form.frete.replace(',', '.')),
+      data_pagamento: form.data_pagamento,
+      responsavel_id: form.responsavel_id,
+      observacoes: form.observacoes,
     };
 
     try {
-      if (isEditing && id) {
-        await atualizarNF.mutateAsync({ id, data });
+      if (form.categoria === 'pend-pte') {
+        await criarPTE.mutateAsync(data);
+        navigate('/pend-pte');
       } else {
-        await criarNF.mutateAsync(data);
+        await criarSAL.mutateAsync(data);
+        navigate('/pend-sal');
       }
-      navigate('/notas-fiscais');
     } catch {
       toast.error('Erro ao salvar NF.');
     }
@@ -69,12 +78,14 @@ export default function NFForm() {
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: '' }));
   };
 
+  const isPending = criarPTE.isPending || criarSAL.isPending;
+
   return (
     <AppLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{isEditing ? 'Editar NF' : 'Nova Nota Fiscal'}</h1>
-          <p className="text-muted-foreground text-sm">{isEditing ? 'Atualize as informações da nota fiscal' : 'Preencha os dados da nova nota fiscal de transporte'}</p>
+          <h1 className="text-2xl font-bold text-foreground">Nova Nota Fiscal</h1>
+          <p className="text-muted-foreground text-sm">Preencha os dados da nova nota fiscal de transporte</p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
@@ -85,14 +96,15 @@ export default function NFForm() {
               {errors.numero_nf && <p className="text-xs text-destructive">{errors.numero_nf}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="responsavel">Responsável *</Label>
-              <Select value={form.responsavel_id} onValueChange={v => update('responsavel_id', v)}>
-                <SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione o responsável" /></SelectTrigger>
+              <Label htmlFor="categoria">Categoria *</Label>
+              <Select value={form.categoria} onValueChange={v => update('categoria', v)}>
+                <SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
                 <SelectContent>
-                  {mockUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                  <SelectItem value="pend-sal">Pendência SAL</SelectItem>
+                  <SelectItem value="pend-pte">Pendência PTE</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.responsavel_id && <p className="text-xs text-destructive">{errors.responsavel_id}</p>}
+              {errors.categoria && <p className="text-xs text-destructive">{errors.categoria}</p>}
             </div>
           </div>
 
@@ -109,6 +121,24 @@ export default function NFForm() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <Label htmlFor="responsavel">Responsável *</Label>
+              <Select value={form.responsavel_id} onValueChange={v => update('responsavel_id', v)}>
+                <SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione o responsável" /></SelectTrigger>
+                <SelectContent>
+                  {mockUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {errors.responsavel_id && <p className="text-xs text-destructive">{errors.responsavel_id}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="frete">Valor do Frete (R$) *</Label>
+              <Input id="frete" placeholder="0,00" value={form.frete} onChange={e => update('frete', e.target.value)} className="bg-secondary" />
+              {errors.frete && <p className="text-xs text-destructive">{errors.frete}</p>}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="space-y-2">
               <Label htmlFor="data_chegada">Data de Chegada *</Label>
@@ -120,9 +150,8 @@ export default function NFForm() {
               <Input id="data_entrega" type="date" value={form.data_entrega} onChange={e => update('data_entrega', e.target.value)} className="bg-secondary" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="frete">Valor do Frete (R$) *</Label>
-              <Input id="frete" placeholder="0,00" value={form.frete} onChange={e => update('frete', e.target.value)} className="bg-secondary" />
-              {errors.frete && <p className="text-xs text-destructive">{errors.frete}</p>}
+              <Label htmlFor="data_pagamento">Data de Pagamento</Label>
+              <Input id="data_pagamento" type="date" value={form.data_pagamento} onChange={e => update('data_pagamento', e.target.value)} className="bg-secondary" />
             </div>
           </div>
 
@@ -132,10 +161,10 @@ export default function NFForm() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={criarNF.isPending || atualizarNF.isPending}>
-              {(criarNF.isPending || atualizarNF.isPending) ? 'Salvando...' : 'Salvar'}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? 'Salvando...' : 'Salvar'}
             </Button>
-            <Button type="button" variant="outline" onClick={() => navigate('/notas-fiscais')}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => navigate('/')}>Cancelar</Button>
           </div>
         </form>
       </div>

@@ -1,5 +1,4 @@
 import { AppLayout } from '@/components/AppLayout';
-import { useNFs } from '@/hooks/useNFs';
 import { usePendItems } from '@/hooks/usePend';
 import { mockUsers } from '@/data/mock';
 import { Button } from '@/components/ui/button';
@@ -15,10 +14,10 @@ const COLORS = ['hsl(217, 91%, 60%)', 'hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)',
 const tooltipStyle = { backgroundColor: 'hsl(217, 33%, 17%)', border: '1px solid hsl(217, 33%, 22%)', borderRadius: '8px', color: '#fff' };
 
 export default function Relatorios() {
-  const { data: nfs = [] } = useNFs();
   const { data: pendPTE = [] } = usePendItems('pend-pte');
   const { data: pendSal = [] } = usePendItems('pend-sal');
   const allPend = [...pendPTE, ...pendSal];
+  const nfs = allPend;
 
   const statusData = [
     { name: 'Pendentes', valor: nfs.filter(n => n.status === 'pendente').length },

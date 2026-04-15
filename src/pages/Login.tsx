@@ -34,7 +34,7 @@ export default function Login() {
           <div className="inline-flex p-3 rounded-xl bg-primary/20 mb-4">
             <Truck className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">TransportNF</h1>
+          <h1 className="text-2xl font-bold text-foreground">AC Transportes</h1>
           <p className="text-sm text-muted-foreground mt-1">Acesse sua conta para continuar</p>
         </div>
 

@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  FileText,
   FilePlus,
   BarChart3,
   History,
@@ -15,7 +14,6 @@ import {
 
 const navItems = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { label: 'Notas Fiscais', path: '/notas-fiscais', icon: FileText },
   { label: 'Nova NF', path: '/nova-nf', icon: FilePlus },
   { label: 'Pend. PTE', path: '/pend-pte', icon: ClipboardList },
   { label: 'Pend. Sal', path: '/pend-sal', icon: Wallet },
@@ -36,7 +34,7 @@ export function AppSidebar() {
             <Truck className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-foreground">TransportNF</h1>
+            <h1 className="text-base font-bold text-foreground">AC Transportes</h1>
             <p className="text-xs text-muted-foreground">Gestão de Notas Fiscais</p>
           </div>
         </div>
@@ -64,7 +62,7 @@ export function AppSidebar() {
       </nav>
 
       <div className="p-4 border-t border-sidebar-border">
-        <p className="text-xs text-muted-foreground text-center">© 2024 TransportNF</p>
+        <p className="text-xs text-muted-foreground text-center">© 2024 AC Transportes</p>
       </div>
     </aside>
   );
