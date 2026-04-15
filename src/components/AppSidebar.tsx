@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  FileText,
   FilePlus,
   BarChart3,
   History,
