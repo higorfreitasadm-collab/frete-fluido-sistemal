@@ -24,6 +24,7 @@ export function useCriarNF() {
     mutationFn: (data: NFFormData) => nfService.criar(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['nfs'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast.success('NF criada com sucesso!');
     },
     onError: () => toast.error('Erro ao criar NF.'),
@@ -36,6 +37,7 @@ export function useAtualizarNF() {
     mutationFn: ({ id, data }: { id: string; data: Partial<NFFormData> }) => nfService.atualizar(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['nfs'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast.success('NF atualizada com sucesso!');
     },
     onError: () => toast.error('Erro ao atualizar NF.'),
@@ -48,6 +50,7 @@ export function useExcluirNF() {
     mutationFn: (id: string) => nfService.excluir(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['nfs'] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
       toast.success('NF excluída com sucesso!');
     },
     onError: () => toast.error('Erro ao excluir NF.'),

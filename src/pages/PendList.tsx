@@ -4,7 +4,6 @@ import { AppLayout } from '@/components/AppLayout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PaymentBadge } from '@/components/PaymentBadge';
 import { usePendItems, useExcluirPend } from '@/hooks/usePend';
-import { mockUsers } from '@/data/mock';
 import { PendItem, PendModuleType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,12 +31,14 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
   const excluir = useExcluirPend(module);
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('todos');
-  const [filtroResponsavel, setFiltroResponsavel] = useState('todos');
+  const [filtroCidade, setFiltroCidade] = useState('todos');
   const [filtroPagamento, setFiltroPagamento] = useState('todos');
   const [page, setPage] = useState(1);
   const [sortKey, setSortKey] = useState<keyof PendItem>('created_at');
   const [sortAsc, setSortAsc] = useState(false);
   const [detalhes, setDetalhes] = useState<PendItem | null>(null);
+
+  const cidades = [...new Set(items.map(item => item.cidade))].sort((a, b) => a.localeCompare(b));
 
   const filtered = useMemo(() => {
     let result = [...items];
@@ -46,11 +47,12 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
       result = result.filter(item =>
         item.numero_nf.toLowerCase().includes(q) ||
         item.remetente.toLowerCase().includes(q) ||
-        item.destinatario.toLowerCase().includes(q)
+        item.destinatario.toLowerCase().includes(q) ||
+        item.cidade.toLowerCase().includes(q)
       );
     }
     if (filtroStatus !== 'todos') result = result.filter(i => i.status === filtroStatus);
-    if (filtroResponsavel !== 'todos') result = result.filter(i => i.responsavel_id === filtroResponsavel);
+    if (filtroCidade !== 'todos') result = result.filter(i => i.cidade === filtroCidade);
     if (filtroPagamento === 'pago') result = result.filter(i => !!i.data_pagamento);
     if (filtroPagamento === 'pendente') result = result.filter(i => !i.data_pagamento);
     result.sort((a, b) => {
@@ -59,7 +61,7 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
       return sortAsc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
     });
     return result;
-  }, [items, busca, filtroStatus, filtroResponsavel, filtroPagamento, sortKey, sortAsc]);
+  }, [items, busca, filtroStatus, filtroCidade, filtroPagamento, sortKey, sortAsc]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -68,8 +70,6 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
     if (sortKey === key) setSortAsc(!sortAsc);
     else { setSortKey(key); setSortAsc(true); }
   };
-
-  const getResponsavel = (id: string) => mockUsers.find(u => u.id === id)?.nome ?? '—';
 
   const handleExcluir = (id: string) => {
     if (confirm('Tem certeza que deseja excluir este registro?')) {
@@ -101,7 +101,7 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
         <div className="flex flex-wrap gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por número, remetente ou destinatário..." className="pl-10 bg-secondary" value={busca} onChange={e => { setBusca(e.target.value); setPage(1); }} />
+            <Input placeholder="Buscar por número, remetente, destinatário ou cidade..." className="pl-10 bg-secondary" value={busca} onChange={e => { setBusca(e.target.value); setPage(1); }} />
           </div>
           <Select value={filtroStatus} onValueChange={v => { setFiltroStatus(v); setPage(1); }}>
             <SelectTrigger className="w-40 bg-secondary"><SelectValue placeholder="Status" /></SelectTrigger>
@@ -120,11 +120,11 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
               <SelectItem value="pendente">Pgto. Pendente</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={filtroResponsavel} onValueChange={v => { setFiltroResponsavel(v); setPage(1); }}>
-            <SelectTrigger className="w-48 bg-secondary"><SelectValue placeholder="Responsável" /></SelectTrigger>
+          <Select value={filtroCidade} onValueChange={v => { setFiltroCidade(v); setPage(1); }}>
+            <SelectTrigger className="w-48 bg-secondary"><SelectValue placeholder="Cidade" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos os Responsáveis</SelectItem>
-              {mockUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
+              <SelectItem value="todos">Todas as Cidades</SelectItem>
+              {cidades.map(cidade => <SelectItem key={cidade} value={cidade}>{cidade}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -138,6 +138,7 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
                     { key: 'numero_nf' as const, label: 'Número' },
                     { key: 'remetente' as const, label: 'Remetente' },
                     { key: 'destinatario' as const, label: 'Destinatário' },
+                    { key: 'cidade' as const, label: 'Cidade' },
                     { key: 'data_chegada' as const, label: 'Chegada' },
                     { key: 'data_entrega' as const, label: 'Entrega' },
                     { key: 'frete' as const, label: 'Frete' },
@@ -148,7 +149,6 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
                       {col.label} {sortKey === col.key && (sortAsc ? '↑' : '↓')}
                     </th>
                   ))}
-                  <th className="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Resp.</th>
                   <th className="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
@@ -162,6 +162,7 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
                     <td className="px-3 py-3 text-sm font-medium text-foreground">{item.numero_nf}</td>
                     <td className="px-3 py-3 text-sm text-muted-foreground">{item.remetente}</td>
                     <td className="px-3 py-3 text-sm text-muted-foreground">{item.destinatario}</td>
+                    <td className="px-3 py-3 text-sm text-muted-foreground">{item.cidade}</td>
                     <td className="px-3 py-3 text-sm text-muted-foreground">{new Date(item.data_chegada).toLocaleDateString('pt-BR')}</td>
                     <td className="px-3 py-3 text-sm text-muted-foreground">{item.data_entrega ? new Date(item.data_entrega).toLocaleDateString('pt-BR') : '—'}</td>
                     <td className="px-3 py-3 text-sm font-medium text-foreground">{formatCurrency(item.frete)}</td>
@@ -169,7 +170,6 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
                       <PaymentBadge dataPagamento={item.data_pagamento} />
                     </td>
                     <td className="px-3 py-3"><StatusBadge status={item.status} /></td>
-                    <td className="px-3 py-3 text-sm text-muted-foreground truncate max-w-[100px]">{getResponsavel(item.responsavel_id)}</td>
                     <td className="px-3 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-info" onClick={() => setDetalhes(item)}><Eye className="h-3.5 w-3.5" /></Button>
@@ -209,11 +209,11 @@ export default function PendList({ module, titulo, subtitulo, novaPath, editarPa
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><p className="text-muted-foreground">Remetente</p><p className="text-foreground font-medium">{detalhes.remetente}</p></div>
                 <div><p className="text-muted-foreground">Destinatário</p><p className="text-foreground font-medium">{detalhes.destinatario}</p></div>
+                <div><p className="text-muted-foreground">Cidade</p><p className="text-foreground font-medium">{detalhes.cidade}</p></div>
                 <div><p className="text-muted-foreground">Data de Chegada</p><p className="text-foreground font-medium">{new Date(detalhes.data_chegada).toLocaleDateString('pt-BR')}</p></div>
                 <div><p className="text-muted-foreground">Data de Entrega</p><p className="text-foreground font-medium">{detalhes.data_entrega ? new Date(detalhes.data_entrega).toLocaleDateString('pt-BR') : 'Não entregue'}</p></div>
                 <div><p className="text-muted-foreground">Valor do Frete</p><p className="text-foreground font-medium">{formatCurrency(detalhes.frete)}</p></div>
                 <div><p className="text-muted-foreground">Data de Pagamento</p><p className="text-foreground font-medium">{detalhes.data_pagamento ? new Date(detalhes.data_pagamento).toLocaleDateString('pt-BR') : 'Não pago'}</p></div>
-                <div><p className="text-muted-foreground">Responsável</p><p className="text-foreground font-medium">{getResponsavel(detalhes.responsavel_id)}</p></div>
               </div>
               {detalhes.observacoes ? (
                 <div><p className="text-muted-foreground text-sm">Observações</p><p className="text-foreground text-sm mt-1 bg-secondary p-3 rounded-lg">{detalhes.observacoes}</p></div>

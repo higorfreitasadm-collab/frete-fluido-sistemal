@@ -2,21 +2,32 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useCriarPend, useAtualizarPend, usePendItem } from '@/hooks/usePend';
-import { mockUsers } from '@/data/mock';
-import { PendModuleType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { PendModuleType } from '@/types';
 
 interface PendFormConfig {
   module: PendModuleType;
   titulo: string;
   tituloEditar: string;
   voltarPath: string;
+}
+
+interface PendFormState {
+  numero_nf: string;
+  remetente: string;
+  destinatario: string;
+  cidade: string;
+  data_chegada: string;
+  data_entrega: string;
+  frete: string;
+  data_pagamento: string;
+  observacoes: string;
+  frete_pago: boolean;
 }
 
 export default function PendForm({ module, titulo, tituloEditar, voltarPath }: PendFormConfig) {
@@ -27,15 +38,15 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
   const atualizar = useAtualizarPend(module);
   const { data: existente } = usePendItem(module, id ?? '');
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<PendFormState>({
     numero_nf: '',
     remetente: '',
     destinatario: '',
+    cidade: '',
     data_chegada: '',
     data_entrega: '',
     frete: '',
     data_pagamento: '',
-    responsavel_id: '',
     observacoes: '',
     frete_pago: false,
   });
@@ -46,13 +57,13 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
         numero_nf: existente.numero_nf ?? '',
         remetente: existente.remetente ?? '',
         destinatario: existente.destinatario ?? '',
+        cidade: existente.cidade ?? '',
         data_chegada: existente.data_chegada ?? '',
         data_entrega: existente.data_entrega ?? '',
         frete: existente.frete?.toString() ?? '',
         data_pagamento: existente.data_pagamento ?? '',
-        responsavel_id: existente.responsavel_id ?? '',
         observacoes: existente.observacoes ?? '',
-        frete_pago: !!(existente as any).frete_pago || !!existente.data_pagamento,
+        frete_pago: !!existente.data_pagamento,
       });
     }
   }, [existente]);
@@ -64,9 +75,9 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
     if (!form.numero_nf.trim()) e.numero_nf = 'Número é obrigatório';
     if (!form.remetente.trim()) e.remetente = 'Remetente é obrigatório';
     if (!form.destinatario.trim()) e.destinatario = 'Destinatário é obrigatório';
+    if (!form.cidade.trim()) e.cidade = 'Cidade é obrigatória';
     if (!form.data_chegada) e.data_chegada = 'Data de chegada é obrigatória';
     if (!form.frete || isNaN(Number(form.frete.replace(',', '.')))) e.frete = 'Valor do frete inválido';
-    if (!form.responsavel_id) e.responsavel_id = 'Selecione um responsável';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -77,13 +88,14 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
     const data = {
       ...form,
       frete: Number(form.frete.replace(',', '.')),
-      data_pagamento: form.frete_pago ? (form.data_pagamento || new Date().toISOString().split('T')[0]) : '',
+      data_pagamento: form.frete_pago ? (form.data_pagamento || new Date().toISOString().split('T')[0]) : null,
+      frete_pago: form.frete_pago,
     };
     try {
       if (isEditing && id) {
-        await atualizar.mutateAsync({ id, data: { ...data, frete_pago: undefined } as any });
+        await atualizar.mutateAsync({ id, data });
       } else {
-        await criar.mutateAsync({ ...data, frete_pago: undefined } as any);
+        await criar.mutateAsync(data);
       }
       navigate(voltarPath);
     } catch {
@@ -112,12 +124,9 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
               {errors.numero_nf && <p className="text-xs text-destructive">{errors.numero_nf}</p>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="responsavel">Responsável *</Label>
-              <Select value={form.responsavel_id} onValueChange={v => update('responsavel_id', v)}>
-                <SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione o responsável" /></SelectTrigger>
-                <SelectContent>{mockUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}</SelectContent>
-              </Select>
-              {errors.responsavel_id && <p className="text-xs text-destructive">{errors.responsavel_id}</p>}
+              <Label htmlFor="cidade">Cidade *</Label>
+              <Input id="cidade" placeholder="Ex: São Paulo" value={form.cidade} onChange={e => update('cidade', e.target.value)} className="bg-secondary" />
+              {errors.cidade && <p className="text-xs text-destructive">{errors.cidade}</p>}
             </div>
           </div>
 

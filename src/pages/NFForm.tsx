@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useCriarPend } from '@/hooks/usePend';
-import { mockUsers } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { PendModuleType } from '@/types';
 
@@ -24,7 +22,7 @@ export default function NFForm() {
     data_entrega: '',
     frete: '',
     data_pagamento: '',
-    responsavel_id: '',
+    cidade: '',
     observacoes: '',
     categoria: '' as '' | PendModuleType,
   });
@@ -38,7 +36,7 @@ export default function NFForm() {
     if (!form.destinatario.trim()) e.destinatario = 'Destinatário é obrigatório';
     if (!form.data_chegada) e.data_chegada = 'Data de chegada é obrigatória';
     if (!form.frete || isNaN(Number(form.frete.replace(',', '.')))) e.frete = 'Valor do frete inválido';
-    if (!form.responsavel_id) e.responsavel_id = 'Selecione um responsável';
+    if (!form.cidade.trim()) e.cidade = 'Cidade é obrigatória';
     if (!form.categoria) e.categoria = 'Selecione uma categoria';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -55,8 +53,9 @@ export default function NFForm() {
       data_chegada: form.data_chegada,
       data_entrega: form.data_entrega,
       frete: Number(form.frete.replace(',', '.')),
-      data_pagamento: form.data_pagamento,
-      responsavel_id: form.responsavel_id,
+      data_pagamento: form.data_pagamento || null,
+      frete_pago: !!form.data_pagamento,
+      cidade: form.cidade,
       observacoes: form.observacoes,
     };
 
@@ -97,13 +96,7 @@ export default function NFForm() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="categoria">Categoria *</Label>
-              <Select value={form.categoria} onValueChange={v => update('categoria', v)}>
-                <SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione a categoria" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pend-sal">Pendência SAL</SelectItem>
-                  <SelectItem value="pend-pte">Pendência PTE</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input id="categoria" placeholder="pend-pte ou pend-sal" value={form.categoria} onChange={e => update('categoria', e.target.value)} className="bg-secondary" />
               {errors.categoria && <p className="text-xs text-destructive">{errors.categoria}</p>}
             </div>
           </div>
@@ -123,14 +116,9 @@ export default function NFForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-2">
-              <Label htmlFor="responsavel">Responsável *</Label>
-              <Select value={form.responsavel_id} onValueChange={v => update('responsavel_id', v)}>
-                <SelectTrigger className="bg-secondary"><SelectValue placeholder="Selecione o responsável" /></SelectTrigger>
-                <SelectContent>
-                  {mockUsers.map(u => <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {errors.responsavel_id && <p className="text-xs text-destructive">{errors.responsavel_id}</p>}
+              <Label htmlFor="cidade">Cidade *</Label>
+              <Input id="cidade" placeholder="Ex: São Paulo" value={form.cidade} onChange={e => update('cidade', e.target.value)} className="bg-secondary" />
+              {errors.cidade && <p className="text-xs text-destructive">{errors.cidade}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="frete">Valor do Frete (R$) *</Label>

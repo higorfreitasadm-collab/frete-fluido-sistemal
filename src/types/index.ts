@@ -1,15 +1,5 @@
 export type NFStatus = 'pendente' | 'entregue' | 'atrasada';
 
-export type UserRole = 'administrador' | 'usuario';
-
-export interface User {
-  id: string;
-  nome: string;
-  email: string;
-  role: UserRole;
-  avatar_url?: string;
-}
-
 export interface NotaFiscal {
   id: string;
   numero_nf: string;
@@ -19,7 +9,7 @@ export interface NotaFiscal {
   data_entrega: string | null;
   frete: number;
   status: NFStatus;
-  responsavel_id: string;
+  cidade: string;
   observacoes: string;
   created_at: string;
   updated_at: string;
@@ -32,7 +22,7 @@ export interface NFFormData {
   data_chegada: string;
   data_entrega: string;
   frete: number;
-  responsavel_id: string;
+  cidade: string;
   observacoes: string;
 }
 
@@ -46,8 +36,9 @@ export interface PendItem {
   data_entrega: string | null;
   frete: number;
   data_pagamento: string | null;
+  frete_pago?: boolean;
   status: NFStatus;
-  responsavel_id: string;
+  cidade: string;
   observacoes: string;
   created_at: string;
   updated_at: string;
@@ -60,8 +51,9 @@ export interface PendFormData {
   data_chegada: string;
   data_entrega: string;
   frete: number;
-  data_pagamento: string;
-  responsavel_id: string;
+  data_pagamento: string | null;
+  frete_pago?: boolean;
+  cidade: string;
   observacoes: string;
 }
 
@@ -73,4 +65,7 @@ export interface ActivityLog {
   usuario: string;
   data: string;
   tipo: 'criacao' | 'edicao' | 'entrega' | 'exclusao';
+  entidade?: 'nf' | 'pendencia' | 'usuario' | 'configuracao';
+  registro_id?: string;
+  module?: PendModuleType;
 }

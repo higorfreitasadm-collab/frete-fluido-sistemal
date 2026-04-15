@@ -3,7 +3,7 @@ import { MetricCard } from '@/components/MetricCard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PaymentBadge } from '@/components/PaymentBadge';
 import { usePendItems } from '@/hooks/usePend';
-import { mockActivities } from '@/data/mock';
+import { useActivities } from '@/hooks/useActivities';
 import { FileText, Clock, CheckCircle, AlertTriangle, DollarSign, CreditCard, Banknote, CalendarClock } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Cell } from 'recharts';
 
@@ -14,6 +14,7 @@ function formatCurrency(value: number) {
 export default function Dashboard() {
   const { data: pendPTE = [], isLoading: loadingPTE } = usePendItems('pend-pte');
   const { data: pendSal = [], isLoading: loadingSal } = usePendItems('pend-sal');
+  const { data: activities = [] } = useActivities();
 
   const allPend = [...pendPTE, ...pendSal];
 
@@ -26,6 +27,17 @@ export default function Dashboard() {
   const pgtosPendentes = allPend.filter(p => !p.data_pagamento).length;
   const valorAReceber = allPend.filter(p => !p.data_pagamento).reduce((s, p) => s + p.frete, 0);
   const valorPago = allPend.filter(p => !!p.data_pagamento).reduce((s, p) => s + p.frete, 0);
+  const cidadeRanking = Object.entries(allPend.reduce((acc, nf) => {
+    acc[nf.cidade] = (acc[nf.cidade] || 0) + nf.frete;
+    return acc;
+  }, {} as Record<string, number>))
+    .map(([name, valor]) => ({ name, valor }))
+    .sort((a, b) => b.valor - a.valor);
+
+  const pendenciasPorModulo = [
+    { name: 'PTE', valor: pendPTE.length, fill: 'hsl(217, 91%, 60%)' },
+    { name: 'SAL', valor: pendSal.length, fill: 'hsl(38, 92%, 50%)' },
+  ];
 
   const statusData = [
     { name: 'Pendentes', valor: pendentes, fill: 'hsl(38, 92%, 50%)' },
@@ -68,7 +80,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-sm">Visão geral das notas fiscais de transporte</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-8 gap-4">
           <MetricCard titulo="Total de NFs" valor={total} icon={FileText} />
           <MetricCard titulo="Pendentes" valor={pendentes} icon={Clock} variante="warning" />
           <MetricCard titulo="Entregues" valor={entregues} icon={CheckCircle} variante="success" />
@@ -168,10 +180,38 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="glass-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Ranking de Cidades (Por Frete)</h3>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={cidadeRanking} layout="vertical">
+                <XAxis type="number" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
+                <YAxis type="category" dataKey="name" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 11 }} axisLine={false} width={140} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => formatCurrency(v)} />
+                <Bar dataKey="valor" fill="hsl(217, 91%, 60%)" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="glass-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Pendências por Módulo</h3>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={pendenciasPorModulo}>
+                <XAxis dataKey="name" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
+                  {pendenciasPorModulo.map((entry, idx) => <Cell key={idx} fill={entry.fill} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
         <div className="glass-card p-5">
           <h3 className="text-sm font-semibold text-foreground mb-4">Atividade Recente</h3>
           <div className="flex gap-6 overflow-x-auto">
-            {mockActivities.slice(0, 5).map(act => (
+            {activities.slice(0, 5).map(act => (
               <div key={act.id} className="flex gap-3 min-w-[200px]">
                 <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${act.tipo === 'entrega' ? 'bg-success' : act.tipo === 'criacao' ? 'bg-info' : 'bg-warning'}`} />
                 <div>

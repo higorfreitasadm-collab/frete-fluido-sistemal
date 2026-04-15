@@ -1,7 +1,9 @@
 import { AppLayout } from '@/components/AppLayout';
-import { mockActivities } from '@/data/mock';
+import { useActivities } from '@/hooks/useActivities';
 
 export default function Historico() {
+  const { data: activities = [] } = useActivities();
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -12,9 +14,9 @@ export default function Historico() {
 
         <div className="glass-card p-5">
           <div className="space-y-0">
-            {mockActivities.map((act, idx) => (
+            {activities.map((act, idx) => (
               <div key={act.id} className="flex gap-4 pb-6 relative">
-                {idx < mockActivities.length - 1 && (
+                {idx < activities.length - 1 && (
                   <div className="absolute left-[7px] top-4 bottom-0 w-px bg-border" />
                 )}
                 <div className={`mt-1.5 h-3.5 w-3.5 rounded-full shrink-0 z-10 ring-4 ring-card ${

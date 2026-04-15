@@ -1,6 +1,5 @@
 import { AppLayout } from '@/components/AppLayout';
 import { usePendItems } from '@/hooks/usePend';
-import { mockUsers } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { Download, Printer } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from 'recharts';
@@ -25,9 +24,12 @@ export default function Relatorios() {
     { name: 'Atrasadas', valor: nfs.filter(n => n.status === 'atrasada').length },
   ];
 
-  const remetenteRanking = Object.entries(nfs.reduce((acc, nf) => { acc[nf.remetente] = (acc[nf.remetente] || 0) + nf.frete; return acc; }, {} as Record<string, number>)).map(([name, valor]) => ({ name, valor })).sort((a, b) => b.valor - a.valor);
+  const cidadeRanking = Object.entries(nfs.reduce((acc, nf) => {
+    acc[nf.cidade] = (acc[nf.cidade] || 0) + nf.frete;
+    return acc;
+  }, {} as Record<string, number>)).map(([name, valor]) => ({ name, valor })).sort((a, b) => b.valor - a.valor);
+
   const destinatarioRanking = Object.entries(nfs.reduce((acc, nf) => { acc[nf.destinatario] = (acc[nf.destinatario] || 0) + nf.frete; return acc; }, {} as Record<string, number>)).map(([name, valor]) => ({ name, valor })).sort((a, b) => b.valor - a.valor);
-  const responsavelRanking = Object.entries(nfs.reduce((acc, nf) => { const nome = mockUsers.find(u => u.id === nf.responsavel_id)?.nome ?? 'Desconhecido'; acc[nome] = (acc[nome] || 0) + 1; return acc; }, {} as Record<string, number>)).map(([name, valor]) => ({ name, valor })).sort((a, b) => b.valor - a.valor);
 
   const freteData = [
     { mes: 'Out', frete: 12500 },
@@ -46,11 +48,10 @@ export default function Relatorios() {
     { name: 'Pgto. Pendente', valor: allPend.filter(p => !p.data_pagamento).reduce((s, p) => s + p.frete, 0) },
   ];
 
-  const pagamentoRanking = Object.entries(allPend.filter(p => !!p.data_pagamento).reduce((acc, p) => {
-    const nome = mockUsers.find(u => u.id === p.responsavel_id)?.nome ?? 'Desconhecido';
-    acc[nome] = (acc[nome] || 0) + p.frete;
-    return acc;
-  }, {} as Record<string, number>)).map(([name, valor]) => ({ name, valor })).sort((a, b) => b.valor - a.valor);
+  const pendenciasPorModulo = [
+    { name: 'PTE', valor: pendPTE.length },
+    { name: 'SAL', valor: pendSal.length },
+  ];
 
   return (
     <AppLayout>
@@ -123,13 +124,28 @@ export default function Relatorios() {
           </div>
 
           <div className="glass-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Ranking de Remetentes (por frete)</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-4">Ranking de Cidades (Por Frete)</h3>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={remetenteRanking} layout="vertical">
+              <BarChart data={cidadeRanking} layout="vertical">
                 <XAxis type="number" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
                 <YAxis type="category" dataKey="name" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 11 }} axisLine={false} width={140} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => formatCurrency(v)} />
                 <Bar dataKey="valor" fill="hsl(217, 91%, 60%)" radius={[0, 6, 6, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="glass-card p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Pendências por Módulo</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={pendenciasPorModulo}>
+                <XAxis dataKey="name" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} />
+                <YAxis tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
+                  <Cell fill="hsl(217, 91%, 60%)" />
+                  <Cell fill="hsl(38, 92%, 50%)" />
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -142,30 +158,6 @@ export default function Relatorios() {
                 <YAxis type="category" dataKey="name" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 11 }} axisLine={false} width={140} />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => formatCurrency(v)} />
                 <Bar dataKey="valor" fill="hsl(142, 71%, 45%)" radius={[0, 6, 6, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="glass-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Ranking de Responsáveis (por quantidade)</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={responsavelRanking}>
-                <XAxis dataKey="name" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} />
-                <YAxis tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="valor" fill="hsl(38, 92%, 50%)" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="glass-card p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Ranking por Pagamento (PTE + Sal)</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={pagamentoRanking}>
-                <XAxis dataKey="name" tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} />
-                <YAxis tick={{ fill: 'hsl(215, 20%, 55%)', fontSize: 12 }} axisLine={false} tickFormatter={v => `R$${(v/1000).toFixed(0)}k`} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => formatCurrency(v)} />
-                <Bar dataKey="valor" fill="hsl(270, 70%, 60%)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

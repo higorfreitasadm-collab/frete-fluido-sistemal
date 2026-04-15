@@ -22,7 +22,11 @@ export function useCriarPend(module: PendModuleType) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: PendFormData) => pendService.criar(module, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pend', module] }); toast.success('Registro criado com sucesso!'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pend', module] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
+      toast.success('Registro criado com sucesso!');
+    },
     onError: () => toast.error('Erro ao criar registro.'),
   });
 }
@@ -31,7 +35,11 @@ export function useAtualizarPend(module: PendModuleType) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<PendFormData> }) => pendService.atualizar(module, id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pend', module] }); toast.success('Registro atualizado com sucesso!'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pend', module] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
+      toast.success('Registro atualizado com sucesso!');
+    },
     onError: () => toast.error('Erro ao atualizar registro.'),
   });
 }
@@ -40,7 +48,11 @@ export function useExcluirPend(module: PendModuleType) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => pendService.excluir(module, id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['pend', module] }); toast.success('Registro excluído com sucesso!'); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['pend', module] });
+      qc.invalidateQueries({ queryKey: ['activities'] });
+      toast.success('Registro excluído com sucesso!');
+    },
     onError: () => toast.error('Erro ao excluir registro.'),
   });
 }
