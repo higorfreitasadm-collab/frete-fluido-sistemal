@@ -1,6 +1,5 @@
 import { AppLayout } from '@/components/AppLayout';
 import { usePendItems } from '@/hooks/usePend';
-import { usePendItems } from '@/hooks/usePend';
 import { mockUsers } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { Download, Printer } from 'lucide-react';
