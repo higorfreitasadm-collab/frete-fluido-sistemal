@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "./pages/Dashboard";
-import NotasFiscais from "./pages/NotasFiscais";
 import NFForm from "./pages/NFForm";
 import PendPTEList from "./pages/PendPTEList";
 import PendPTEForm from "./pages/PendPTEForm";
@@ -25,9 +24,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/notas-fiscais" element={<NotasFiscais />} />
           <Route path="/nova-nf" element={<NFForm />} />
-          <Route path="/editar-nf/:id" element={<NFForm />} />
           <Route path="/pend-pte" element={<PendPTEList />} />
           <Route path="/pend-pte/novo" element={<PendPTEForm />} />
           <Route path="/pend-pte/editar/:id" element={<PendPTEForm />} />

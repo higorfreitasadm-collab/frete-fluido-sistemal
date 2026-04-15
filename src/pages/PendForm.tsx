@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '@/components/AppLayout';
 import { useCriarPend, useAtualizarPend, usePendItem } from '@/hooks/usePend';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
@@ -27,16 +28,34 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
   const { data: existente } = usePendItem(module, id ?? '');
 
   const [form, setForm] = useState({
-    numero_nf: existente?.numero_nf ?? '',
-    remetente: existente?.remetente ?? '',
-    destinatario: existente?.destinatario ?? '',
-    data_chegada: existente?.data_chegada ?? '',
-    data_entrega: existente?.data_entrega ?? '',
-    frete: existente?.frete?.toString() ?? '',
-    data_pagamento: existente?.data_pagamento ?? '',
-    responsavel_id: existente?.responsavel_id ?? '',
-    observacoes: existente?.observacoes ?? '',
+    numero_nf: '',
+    remetente: '',
+    destinatario: '',
+    data_chegada: '',
+    data_entrega: '',
+    frete: '',
+    data_pagamento: '',
+    responsavel_id: '',
+    observacoes: '',
+    frete_pago: false,
   });
+
+  useEffect(() => {
+    if (existente) {
+      setForm({
+        numero_nf: existente.numero_nf ?? '',
+        remetente: existente.remetente ?? '',
+        destinatario: existente.destinatario ?? '',
+        data_chegada: existente.data_chegada ?? '',
+        data_entrega: existente.data_entrega ?? '',
+        frete: existente.frete?.toString() ?? '',
+        data_pagamento: existente.data_pagamento ?? '',
+        responsavel_id: existente.responsavel_id ?? '',
+        observacoes: existente.observacoes ?? '',
+        frete_pago: !!(existente as any).frete_pago || !!existente.data_pagamento,
+      });
+    }
+  }, [existente]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -55,12 +74,16 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    const data = { ...form, frete: Number(form.frete.replace(',', '.')) };
+    const data = {
+      ...form,
+      frete: Number(form.frete.replace(',', '.')),
+      data_pagamento: form.frete_pago ? (form.data_pagamento || new Date().toISOString().split('T')[0]) : '',
+    };
     try {
       if (isEditing && id) {
-        await atualizar.mutateAsync({ id, data });
+        await atualizar.mutateAsync({ id, data: { ...data, frete_pago: undefined } as any });
       } else {
-        await criar.mutateAsync(data);
+        await criar.mutateAsync({ ...data, frete_pago: undefined } as any);
       }
       navigate(voltarPath);
     } catch {
@@ -68,9 +91,9 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
     }
   };
 
-  const update = (key: string, value: string) => {
+  const update = (key: string, value: string | boolean) => {
     setForm(prev => ({ ...prev, [key]: value }));
-    if (errors[key]) setErrors(prev => ({ ...prev, [key]: '' }));
+    if (typeof value === 'string' && errors[key]) setErrors(prev => ({ ...prev, [key]: '' }));
   };
 
   return (
@@ -128,9 +151,25 @@ export default function PendForm({ module, titulo, tituloEditar, voltarPath }: P
             </div>
             <div className="space-y-2">
               <Label htmlFor="data_pagamento">Data de Pagamento</Label>
-              <Input id="data_pagamento" type="date" value={form.data_pagamento} onChange={e => update('data_pagamento', e.target.value)} className="bg-secondary" />
+              <Input id="data_pagamento" type="date" value={form.data_pagamento} onChange={e => update('data_pagamento', e.target.value)} className="bg-secondary" disabled={!form.frete_pago} />
             </div>
           </div>
+
+          {isEditing && (
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 border border-border/50">
+              <Switch
+                id="frete_pago"
+                checked={form.frete_pago}
+                onCheckedChange={(checked) => update('frete_pago', checked)}
+              />
+              <Label htmlFor="frete_pago" className="text-sm font-medium cursor-pointer">
+                Frete pago
+              </Label>
+              {form.frete_pago && (
+                <span className="text-xs text-success ml-2">✓ Marcado como pago</span>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="observacoes">Observações</Label>
