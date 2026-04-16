@@ -17,6 +17,25 @@ npm run lint
 npm run test
 ```
 
+## Deploy na Vercel
+
+O projeto ja esta pronto para publicar como SPA no Vercel. A regra de rewrite em [`vercel.json`](./vercel.json) garante que rotas como `/login` e `/relatorios` continuem funcionando ao recarregar a pagina.
+
+Passos:
+
+1. Suba este diretorio para um repositório no GitHub.
+2. Importe o projeto no Vercel.
+3. Use as configuracoes padrao de Vite, se a plataforma nao detectar automaticamente:
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+4. Adicione as variaveis de ambiente no painel da Vercel:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_API_BASE_URL` se a API externa for usada
+5. Faça o deploy.
+
+Se quiser testar localmente o mesmo build do Vercel, rode `npm run build` e depois `npm run preview`.
+
 ## Proxima etapa
 
 O projeto ja esta organizado para evoluir em tres frentes:
