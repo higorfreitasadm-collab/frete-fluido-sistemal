@@ -21,10 +21,16 @@ export function useAuth() {
 
     let active = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      setState({ session: data.session, loading: false });
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        setState({ session: data.session, loading: false });
+      })
+      .catch(() => {
+        if (!active) return;
+        setState({ session: null, loading: false });
+      });
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
