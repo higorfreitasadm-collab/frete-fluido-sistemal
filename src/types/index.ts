@@ -29,6 +29,7 @@ export interface NFFormData {
 // Extended type with data_pagamento for PendPTE and PendSal modules
 export interface PendItem {
   id: string;
+  owner_id?: string | null;
   numero_nf: string;
   remetente: string;
   destinatario: string;

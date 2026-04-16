@@ -23,8 +23,15 @@ async function withReadFallback<T>(remotePromise: Promise<T>, fallback: () => T 
   }
 }
 
+async function getCurrentUserId() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) return null;
+  return data.user?.id ?? null;
+}
+
 type PendenciaRow = {
   id: string;
+  owner_id: string | null;
   module: PendModuleType;
   numero_nf: string;
   remetente: string;
@@ -113,6 +120,7 @@ function parseMaybeDate(date: string | null | undefined) {
 function toPendItem(row: PendenciaRow): PendItem {
   return {
     id: row.id,
+    owner_id: row.owner_id,
     numero_nf: row.numero_nf,
     remetente: row.remetente,
     destinatario: row.destinatario,
@@ -220,10 +228,11 @@ async function fetchPendSupabase(module: PendModuleType, id: string): Promise<Pe
 }
 
 async function createPendSupabase(module: PendModuleType, data: PendFormData): Promise<PendItem> {
+  const ownerId = await getCurrentUserId();
   const payload = toPendInsert(module, data);
   const { data: inserted, error } = await supabase
     .from('pendencias')
-    .insert(payload)
+    .insert({ ...payload, owner_id: ownerId })
     .select('*')
     .single();
 
@@ -234,6 +243,7 @@ async function createPendSupabase(module: PendModuleType, data: PendFormData): P
 async function updatePendSupabase(module: PendModuleType, id: string, data: Partial<PendFormData>): Promise<PendItem> {
   const current = await fetchPendSupabase(module, id);
   if (!current) throw new Error('Item não encontrado');
+  const ownerId = current.owner_id ?? (await getCurrentUserId());
 
   const merged = {
     numero_nf: data.numero_nf ?? current.numero_nf,
@@ -259,6 +269,7 @@ async function updatePendSupabase(module: PendModuleType, id: string, data: Part
     data_pagamento: paid.data_pagamento,
     frete_pago: paid.frete_pago,
     observacoes: merged.observacoes,
+    owner_id: ownerId,
     updated_at: new Date().toISOString(),
   };
 
@@ -367,10 +378,11 @@ export const nfService = {
       return nova;
     }
 
+    const ownerId = await getCurrentUserId();
     const payload = toNFInsert(data);
     const { data: inserted, error } = await supabase
       .from('pendencias')
-      .insert({ ...payload, module: 'pend-pte' })
+      .insert({ ...payload, module: 'pend-pte', owner_id: ownerId })
       .select('*')
       .single();
 

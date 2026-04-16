@@ -145,7 +145,7 @@ begin
     v_tipo := 'criacao';
     v_descricao := format('Registro %s criado no módulo %s', new.numero_nf, upper(replace(new.module, 'pend-', '')));
     insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (new.owner_id, v_descricao, coalesce(new.usuario, 'Sistema'), now(), v_tipo, 'pendencia', new.id, new.module);
+    values (coalesce(new.owner_id, auth.uid()), v_descricao, coalesce(new.usuario, 'Sistema'), now(), v_tipo, 'pendencia', new.id, new.module);
     return null;
   elsif tg_op = 'UPDATE' then
     v_tipo := case when old.frete_pago is distinct from new.frete_pago or old.data_pagamento is distinct from new.data_pagamento then 'edicao' else 'edicao' end;
@@ -161,13 +161,13 @@ begin
     end if;
 
     insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (new.owner_id, v_descricao, coalesce(new.usuario, 'Sistema'), now(), v_tipo, 'pendencia', new.id, new.module);
+    values (coalesce(new.owner_id, auth.uid()), v_descricao, coalesce(new.usuario, 'Sistema'), now(), v_tipo, 'pendencia', new.id, new.module);
     return null;
   elsif tg_op = 'DELETE' then
     v_tipo := 'exclusao';
     v_descricao := format('Registro %s excluído do módulo %s', old.numero_nf, upper(replace(old.module, 'pend-', '')));
     insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (old.owner_id, v_descricao, coalesce(old.usuario, 'Sistema'), now(), v_tipo, 'pendencia', old.id, old.module);
+    values (coalesce(old.owner_id, auth.uid()), v_descricao, coalesce(old.usuario, 'Sistema'), now(), v_tipo, 'pendencia', old.id, old.module);
     return null;
   end if;
 
