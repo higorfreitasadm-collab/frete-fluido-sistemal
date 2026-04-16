@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Truck } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Truck } from 'lucide-react';
-import { toast } from 'sonner';
+import { isSupabaseReady, supabase } from '@/lib/supabase';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,17 +16,33 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email || !senha) {
       toast.error('Preencha todos os campos.');
       return;
     }
+
+    if (!isSupabaseReady) {
+      toast.error('Supabase nao esta configurado neste ambiente.');
+      return;
+    }
+
     setLoading(true);
-    // Simulated login - ready for Supabase auth
-    setTimeout(() => {
-      setLoading(false);
-      toast.success('Login realizado com sucesso!');
-      navigate('/');
-    }, 800);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: senha,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success('Login realizado com sucesso!');
+    navigate('/');
   };
 
   return (
@@ -41,11 +59,27 @@ export default function Login() {
         <form onSubmit={handleLogin} className="glass-card p-6 space-y-5">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} className="bg-secondary" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="bg-secondary"
+              autoComplete="email"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="senha">Senha</Label>
-            <Input id="senha" type="password" placeholder="••••••••" value={senha} onChange={e => setSenha(e.target.value)} className="bg-secondary" />
+            <Input
+              id="senha"
+              type="password"
+              placeholder="••••••••"
+              value={senha}
+              onChange={e => setSenha(e.target.value)}
+              className="bg-secondary"
+              autoComplete="current-password"
+            />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Entrando...' : 'Entrar'}
@@ -53,7 +87,7 @@ export default function Login() {
         </form>
 
         <p className="text-xs text-muted-foreground text-center">
-          Ambiente de demonstração · Dados simulados
+          O acesso agora usa autenticação real do Supabase.
         </p>
       </div>
     </div>

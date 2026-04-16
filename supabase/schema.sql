@@ -43,31 +43,65 @@ create index if not exists activity_logs_data_idx on public.activity_logs (data 
 create index if not exists activity_logs_tipo_idx on public.activity_logs (tipo);
 create index if not exists activity_logs_module_idx on public.activity_logs (module);
 
+alter table public.pendencias add column if not exists owner_id uuid default auth.uid();
+alter table public.activity_logs add column if not exists owner_id uuid default auth.uid();
+
 alter table public.pendencias enable row level security;
 alter table public.activity_logs enable row level security;
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_policies where schemaname = 'public' and tablename = 'pendencias' and policyname = 'allow full access to pendencias'
-  ) then
-    create policy "allow full access to pendencias"
-      on public.pendencias
-      for all
-      using (true)
-      with check (true);
-  end if;
+drop policy if exists "allow full access to pendencias" on public.pendencias;
+drop policy if exists "allow full access to activity logs" on public.activity_logs;
 
-  if not exists (
-    select 1 from pg_policies where schemaname = 'public' and tablename = 'activity_logs' and policyname = 'allow full access to activity logs'
-  ) then
-    create policy "allow full access to activity logs"
-      on public.activity_logs
-      for all
-      using (true)
-      with check (true);
-  end if;
-end $$;
+drop policy if exists "pendencias_select_own" on public.pendencias;
+drop policy if exists "pendencias_insert_own" on public.pendencias;
+drop policy if exists "pendencias_update_own" on public.pendencias;
+drop policy if exists "pendencias_delete_own" on public.pendencias;
+drop policy if exists "activity_logs_select_own" on public.activity_logs;
+drop policy if exists "activity_logs_insert_own" on public.activity_logs;
+drop policy if exists "activity_logs_update_own" on public.activity_logs;
+drop policy if exists "activity_logs_delete_own" on public.activity_logs;
+
+create policy "pendencias_select_own"
+  on public.pendencias
+  for select
+  using (auth.uid() is not null and (owner_id = auth.uid() or owner_id is null));
+
+create policy "pendencias_insert_own"
+  on public.pendencias
+  for insert
+  with check (owner_id = auth.uid());
+
+create policy "pendencias_update_own"
+  on public.pendencias
+  for update
+  using (auth.uid() is not null and (owner_id = auth.uid() or owner_id is null))
+  with check (auth.uid() is not null and owner_id = auth.uid());
+
+create policy "pendencias_delete_own"
+  on public.pendencias
+  for delete
+  using (auth.uid() is not null and (owner_id = auth.uid() or owner_id is null));
+
+create policy "activity_logs_select_own"
+  on public.activity_logs
+  for select
+  using (auth.uid() is not null and (owner_id = auth.uid() or owner_id is null));
+
+create policy "activity_logs_insert_own"
+  on public.activity_logs
+  for insert
+  with check (owner_id = auth.uid());
+
+create policy "activity_logs_update_own"
+  on public.activity_logs
+  for update
+  using (auth.uid() is not null and (owner_id = auth.uid() or owner_id is null))
+  with check (auth.uid() is not null and owner_id = auth.uid());
+
+create policy "activity_logs_delete_own"
+  on public.activity_logs
+  for delete
+  using (auth.uid() is not null and (owner_id = auth.uid() or owner_id is null));
 
 create or replace function public.sync_pendencia_payment_state()
 returns trigger
@@ -110,8 +144,8 @@ begin
   if tg_op = 'INSERT' then
     v_tipo := 'criacao';
     v_descricao := format('Registro %s criado no módulo %s', new.numero_nf, upper(replace(new.module, 'pend-', '')));
-    insert into public.activity_logs (descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (v_descricao, coalesce(new.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', new.id, new.module);
+    insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
+    values (new.owner_id, v_descricao, coalesce(new.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', new.id, new.module);
     return null;
   elsif tg_op = 'UPDATE' then
     v_tipo := case when old.frete_pago is distinct from new.frete_pago or old.data_pagamento is distinct from new.data_pagamento then 'edicao' else 'edicao' end;
@@ -126,14 +160,14 @@ begin
       v_descricao := format('Registro %s atualizado', new.numero_nf);
     end if;
 
-    insert into public.activity_logs (descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (v_descricao, coalesce(new.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', new.id, new.module);
+    insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
+    values (new.owner_id, v_descricao, coalesce(new.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', new.id, new.module);
     return null;
   elsif tg_op = 'DELETE' then
     v_tipo := 'exclusao';
     v_descricao := format('Registro %s excluído do módulo %s', old.numero_nf, upper(replace(old.module, 'pend-', '')));
-    insert into public.activity_logs (descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (v_descricao, coalesce(old.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', old.id, old.module);
+    insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
+    values (old.owner_id, v_descricao, coalesce(old.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', old.id, old.module);
     return null;
   end if;
 

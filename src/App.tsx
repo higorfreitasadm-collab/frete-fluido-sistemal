@@ -1,8 +1,10 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { isSupabaseReady } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NFForm = lazy(() => import("./pages/NFForm"));
@@ -24,6 +26,42 @@ const RouteFallback = () => (
   </div>
 );
 
+const AuthenticatedRoute = ({ children }: { children: ReactNode }) => {
+  const { session, loading } = useAuth();
+
+  if (!isSupabaseReady) {
+    return <>{children}</>;
+  }
+
+  if (loading) {
+    return <RouteFallback />;
+  }
+
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const LoginRoute = ({ children }: { children: ReactNode }) => {
+  const { session, loading } = useAuth();
+
+  if (!isSupabaseReady) {
+    return <>{children}</>;
+  }
+
+  if (loading) {
+    return <RouteFallback />;
+  }
+
+  if (session) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -31,18 +69,102 @@ const App = () => (
       <BrowserRouter>
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/nova-nf" element={<NFForm />} />
-            <Route path="/pend-pte" element={<PendPTEList />} />
-            <Route path="/pend-pte/novo" element={<PendPTEForm />} />
-            <Route path="/pend-pte/editar/:id" element={<PendPTEForm />} />
-            <Route path="/pend-sal" element={<PendSalList />} />
-            <Route path="/pend-sal/novo" element={<PendSalForm />} />
-            <Route path="/pend-sal/editar/:id" element={<PendSalForm />} />
-            <Route path="/relatorios" element={<Relatorios />} />
-            <Route path="/historico" element={<Historico />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <AuthenticatedRoute>
+                  <Dashboard />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/nova-nf"
+              element={
+                <AuthenticatedRoute>
+                  <NFForm />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/pend-pte"
+              element={
+                <AuthenticatedRoute>
+                  <PendPTEList />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/pend-pte/novo"
+              element={
+                <AuthenticatedRoute>
+                  <PendPTEForm />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/pend-pte/editar/:id"
+              element={
+                <AuthenticatedRoute>
+                  <PendPTEForm />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/pend-sal"
+              element={
+                <AuthenticatedRoute>
+                  <PendSalList />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/pend-sal/novo"
+              element={
+                <AuthenticatedRoute>
+                  <PendSalForm />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/pend-sal/editar/:id"
+              element={
+                <AuthenticatedRoute>
+                  <PendSalForm />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/relatorios"
+              element={
+                <AuthenticatedRoute>
+                  <Relatorios />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/historico"
+              element={
+                <AuthenticatedRoute>
+                  <Historico />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/configuracoes"
+              element={
+                <AuthenticatedRoute>
+                  <Configuracoes />
+                </AuthenticatedRoute>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <LoginRoute>
+                  <Login />
+                </LoginRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

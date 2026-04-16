@@ -58,6 +58,9 @@ VITE_SUPABASE_ANON_KEY=
 
 3. Execute o SQL do arquivo `supabase/schema.sql` no SQL Editor do Supabase.
 4. Rode o projeto com `npm run dev`.
+5. Crie um usuario no Supabase Auth para acessar o sistema.
+6. Desative signups publicos no Auth se o sistema for usado apenas por voce.
 
 O backend salva tudo na tabela `pendencias`, e qualquer inclusao, edicao ou exclusao gera registro em `activity_logs`.
 Quando `data_pagamento` for preenchida, o banco marca automaticamente `frete_pago = true`.
+Com o login ativo, apenas o usuario autenticado consegue ler e alterar os dados.
