@@ -4,6 +4,24 @@ import { appUser, mockActivities, mockNFs, mockPendPTE, mockPendSal } from '@/da
 import { NotaFiscal, NFFormData, ActivityLog, PendItem, PendFormData, PendModuleType } from '@/types';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const SUPABASE_READ_TIMEOUT_MS = 3500;
+
+async function withReadFallback<T>(remotePromise: Promise<T>, fallback: () => T | Promise<T>): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error('Supabase request timed out')), SUPABASE_READ_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([remotePromise, timeoutPromise]);
+  } catch {
+    return await fallback();
+  } finally {
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId);
+    }
+  }
+}
 
 type PendenciaRow = {
   id: string;
@@ -292,14 +310,19 @@ export const nfService = {
       return [...mockNFs];
     }
 
-    const { data, error } = await supabase
-      .from('pendencias')
-      .select('*')
-      .eq('module', 'pend-pte')
-      .order('created_at', { ascending: false });
+    return withReadFallback(
+      (async () => {
+        const { data, error } = await supabase
+          .from('pendencias')
+          .select('*')
+          .eq('module', 'pend-pte')
+          .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return (data ?? []).map(toNotaFiscal);
+        if (error) throw error;
+        return (data ?? []).map(toNotaFiscal);
+      })(),
+      async () => [...mockNFs],
+    );
   },
   async buscarPorId(id: string): Promise<NotaFiscal | undefined> {
     if (!isSupabaseReady) {
@@ -307,15 +330,20 @@ export const nfService = {
       return mockNFs.find(nf => nf.id === id);
     }
 
-    const { data, error } = await supabase
-      .from('pendencias')
-      .select('*')
-      .eq('module', 'pend-pte')
-      .eq('id', id)
-      .maybeSingle();
+    return withReadFallback(
+      (async () => {
+        const { data, error } = await supabase
+          .from('pendencias')
+          .select('*')
+          .eq('module', 'pend-pte')
+          .eq('id', id)
+          .maybeSingle();
 
-    if (error) throw error;
-    return data ? toNotaFiscal(data) : undefined;
+        if (error) throw error;
+        return data ? toNotaFiscal(data) : undefined;
+      })(),
+      async () => mockNFs.find(nf => nf.id === id),
+    );
   },
   async criar(data: NFFormData): Promise<NotaFiscal> {
     if (!isSupabaseReady) {
@@ -421,14 +449,14 @@ export const pendService = {
       await delay(150);
       return [...getPendStore(module)];
     }
-    return listPendSupabase(module);
+    return withReadFallback(listPendSupabase(module), async () => [...getPendStore(module)]);
   },
   async buscarPorId(module: PendModuleType, id: string): Promise<PendItem | undefined> {
     if (!isSupabaseReady) {
       await delay(100);
       return getPendStore(module).find(p => p.id === id);
     }
-    return fetchPendSupabase(module, id);
+    return withReadFallback(fetchPendSupabase(module, id), async () => getPendStore(module).find(p => p.id === id));
   },
   async criar(module: PendModuleType, data: PendFormData): Promise<PendItem> {
     if (!isSupabaseReady) {
@@ -554,6 +582,6 @@ export const activityService = {
       return [...mockActivities];
     }
 
-    return listActivitiesSupabase();
+    return withReadFallback(listActivitiesSupabase(), async () => [...mockActivities]);
   },
 };
