@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { supabase, isSupabaseReady } from '@/lib/supabase';
-import { appUser, mockActivities, mockNFs, mockPendPTE, mockPendSal } from '@/data/mock';
+import { mockActivities, mockNFs, mockPendPTE, mockPendSal } from '@/data/mock';
 import { NotaFiscal, NFFormData, ActivityLog, PendItem, PendFormData, PendModuleType } from '@/types';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -94,7 +94,7 @@ function createLocalActivity(params: Omit<ActivityLog, 'id' | 'data' | 'usuario'
   const entry: ActivityLog = {
     id: String(Date.now() + Math.random()),
     data: params.data ?? new Date().toISOString(),
-    usuario: params.usuario ?? appUser.nome,
+    usuario: params.usuario ?? 'Sistema',
     descricao: params.descricao,
     tipo: params.tipo,
     entidade: params.entidade,
@@ -168,7 +168,7 @@ function toPendInsert(module: PendModuleType, data: PendFormData) {
     frete_pago: paid.frete_pago,
     status: 'pendente' as const,
     observacoes: parsed.observacoes,
-    usuario: appUser.nome,
+    usuario: 'Sistema',
     created_at: now,
     updated_at: now,
   };
@@ -190,7 +190,7 @@ function toNFInsert(data: NFFormData) {
     frete: parsed.frete,
     status: 'pendente' as const,
     observacoes: parsed.observacoes,
-    usuario: appUser.nome,
+    usuario: 'Sistema',
     created_at: now,
     updated_at: now,
   };

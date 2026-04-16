@@ -17,7 +17,7 @@ create table if not exists public.pendencias (
   frete_pago boolean not null default false,
   status text not null default 'pendente' check (status in ('pendente', 'entregue', 'atrasada')),
   observacoes text not null default '',
-  usuario text not null default 'Higor Freitas',
+  usuario text not null default 'Sistema',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -31,7 +31,7 @@ create index if not exists pendencias_cidade_idx on public.pendencias (cidade);
 create table if not exists public.activity_logs (
   id uuid primary key default gen_random_uuid(),
   descricao text not null,
-  usuario text not null default 'Higor Freitas',
+  usuario text not null default 'Sistema',
   data timestamptz not null default now(),
   tipo text not null check (tipo in ('criacao', 'edicao', 'entrega', 'exclusao')),
   entidade text null,
@@ -145,7 +145,7 @@ begin
     v_tipo := 'criacao';
     v_descricao := format('Registro %s criado no módulo %s', new.numero_nf, upper(replace(new.module, 'pend-', '')));
     insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (new.owner_id, v_descricao, coalesce(new.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', new.id, new.module);
+    values (new.owner_id, v_descricao, coalesce(new.usuario, 'Sistema'), now(), v_tipo, 'pendencia', new.id, new.module);
     return null;
   elsif tg_op = 'UPDATE' then
     v_tipo := case when old.frete_pago is distinct from new.frete_pago or old.data_pagamento is distinct from new.data_pagamento then 'edicao' else 'edicao' end;
@@ -161,13 +161,13 @@ begin
     end if;
 
     insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (new.owner_id, v_descricao, coalesce(new.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', new.id, new.module);
+    values (new.owner_id, v_descricao, coalesce(new.usuario, 'Sistema'), now(), v_tipo, 'pendencia', new.id, new.module);
     return null;
   elsif tg_op = 'DELETE' then
     v_tipo := 'exclusao';
     v_descricao := format('Registro %s excluído do módulo %s', old.numero_nf, upper(replace(old.module, 'pend-', '')));
     insert into public.activity_logs (owner_id, descricao, usuario, data, tipo, entidade, registro_id, module)
-    values (old.owner_id, v_descricao, coalesce(old.usuario, 'Higor Freitas'), now(), v_tipo, 'pendencia', old.id, old.module);
+    values (old.owner_id, v_descricao, coalesce(old.usuario, 'Sistema'), now(), v_tipo, 'pendencia', old.id, old.module);
     return null;
   end if;
 
@@ -180,3 +180,5 @@ create trigger trg_archive_pendencia_activity
 after insert or update or delete on public.pendencias
 for each row
 execute function public.archive_pendencia_activity();
+
+

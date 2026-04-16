@@ -1,5 +1,5 @@
-import { Search, LogOut, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { appUser } from '@/data/mock';
+import { Search, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { isSupabaseReady } from '@/lib/supabase';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -19,7 +19,7 @@ export function AppTopbar({ sidebarOpen, onToggleSidebar }: AppTopbarProps) {
         <div className="relative hidden md:block w-full max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar NFs, remetentes, destinatários..."
+            placeholder="Buscar NFs, remetentes, destinatarios..."
             className="pl-10 bg-secondary border-border/50 focus:ring-primary"
           />
         </div>
@@ -31,19 +31,10 @@ export function AppTopbar({ sidebarOpen, onToggleSidebar }: AppTopbarProps) {
           <span className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-destructive rounded-full" />
         </Button>
 
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">
-            {appUser.nome.charAt(0)}
-          </div>
-          <div className="hidden md:block">
-            <p className="text-sm font-medium text-foreground">{appUser.nome}</p>
-            <p className="text-xs text-muted-foreground">Registro único</p>
-          </div>
+        <div className="hidden md:flex items-center gap-2 rounded-full border border-border/60 bg-secondary/60 px-3 py-1.5 text-xs text-muted-foreground">
+          <span className={`h-2 w-2 rounded-full ${isSupabaseReady ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+          <span>{isSupabaseReady ? 'Supabase ativo' : 'Modo local'}</span>
         </div>
-
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-          <LogOut className="h-4 w-4" />
-        </Button>
       </div>
     </header>
   );
